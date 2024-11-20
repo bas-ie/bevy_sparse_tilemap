@@ -78,9 +78,7 @@ fn spawn_map(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
 
     let mut tilemap_builder = HexTilemapBuilder::new(
         TilemapLayer::new_dense_from_vecs(generate_random_tile_data(map_size.clone())),
-        HexMapData {
-            max_chunk_size: max_chunk_size,
-        },
+        HexMapData { max_chunk_size },
         HexagonChunkSettings {
             orientation: HEXAGON_ORIENTATION,
             max_chunk_size,

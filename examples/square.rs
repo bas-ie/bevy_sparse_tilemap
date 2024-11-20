@@ -23,10 +23,7 @@ fn main() {
             }),
             ..default()
         }))
-        .add_plugins((
-            LogDiagnosticsPlugin::default(),
-            FrameTimeDiagnosticsPlugin::default(),
-        ))
+        .add_plugins((LogDiagnosticsPlugin::default(), FrameTimeDiagnosticsPlugin))
         .add_systems(Startup, spawn_map)
         .run();
 }
@@ -54,12 +51,12 @@ fn spawn_map(mut commands: Commands) {
 
     let mut tilemap_builder =
         TilemapBuilder::<TileData, MapLayers, SquareChunkLayer<TileData>, SquareMapData>::new(
-            TilemapLayer::new_dense_from_vecs(generate_random_tile_data(map_size.clone())),
+            TilemapLayer::new_dense_from_vecs(generate_random_tile_data(map_size)),
             SquareMapData { max_chunk_size },
             SquareChunkSettings { max_chunk_size },
         );
     tilemap_builder.add_layer(
-        TilemapLayer::new_dense_from_vecs(generate_random_tile_data(map_size.clone())),
+        TilemapLayer::new_dense_from_vecs(generate_random_tile_data(map_size)),
         MapLayers::DenseExtra,
     );
     tilemap_builder.add_layer(
