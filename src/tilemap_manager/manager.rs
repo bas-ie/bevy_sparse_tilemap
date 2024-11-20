@@ -51,8 +51,7 @@ where
     map_entity: Local<'s, MapEntity>,
 }
 
-impl<'w, 's, TileData, MapLayers, MapChunk, Map>
-    TilemapManager<'w, 's, TileData, MapLayers, MapChunk, Map>
+impl<TileData, MapLayers, MapChunk, Map> TilemapManager<'_, '_, TileData, MapLayers, MapChunk, Map>
 where
     TileData: Hash + Clone + Copy + Sized + Default + Send + Sync + 'static,
     MapLayers: MapLayer + Default + Clone + Copy + Send + Sync + 'static,
@@ -168,7 +167,8 @@ where
                 .get_chunk_for_cell(cell, map)
                 .ok_or(TilemapManagerError::InvalidChunkPos)?,
         )?;
-        Ok(chunk.set_tile_data_from_cell(self.layer_index.0.to_bits(), cell, tile_data))
+        chunk.set_tile_data_from_cell(self.layer_index.0.to_bits(), cell, tile_data);
+        Ok(())
     }
 
     /// Gets the [`Entity`] for the given [`Cell`] if it exists.
@@ -302,16 +302,13 @@ mod tests {
 
     use crate::tilemap_builder::tilemap_layer_builder::TilemapLayer;
     use crate::tilemap_builder::TilemapBuilder;
-    use crate::tilemap_manager::tilemap_manager::TilemapManager;
+    use crate::tilemap_manager::manager::TilemapManager;
     use bevy::ecs::system::{Commands, SystemState};
     use bevy::math::UVec2;
     use bevy::prelude::World;
     use bevy::utils::hashbrown::HashMap;
     use bst_map_layer_derive::MapLayer;
     use lettuces::cell::Cell;
-
-    #[derive(Clone, Copy, Default, PartialEq, Eq, Debug)]
-    struct TileData(u8);
 
     #[derive(MapLayer, Default, Debug, PartialEq, Eq, Clone, Copy)]
     enum MapLayers {
@@ -324,6 +321,7 @@ mod tests {
     fn tilemap_manager_layer_access() {
         let mut world = World::new();
 
+        #[allow(clippy::type_complexity)]
         let mut system_state: SystemState<(
             Commands,
             TilemapManager<(i32, i32), MapLayers, SquareChunkLayer<(i32, i32)>, SquareMapData>,
@@ -352,6 +350,7 @@ mod tests {
 
         let mut world = World::new();
 
+        #[allow(clippy::type_complexity)]
         let mut system_state: SystemState<(
             Commands,
             TilemapManager<(i32, i32), MapLayers, SquareChunkLayer<(i32, i32)>, SquareMapData>,
@@ -380,56 +379,59 @@ mod tests {
         let (_, mut tilemap_manager) = system_state.get_mut(&mut world);
         tilemap_manager.set_tilemap_entity(map_entity);
         assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(0, 0)).unwrap(),
+            tilemap_manager
+                .get_tile_data(Cell::new(0, 0))
+                .expect("no tile data"),
             (0, 0)
         );
         assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(7, 8)).unwrap(),
+            tilemap_manager
+                .get_tile_data(Cell::new(7, 8))
+                .expect("no tile data"),
             (7, 8)
         );
         assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(7, 0)).unwrap(),
+            tilemap_manager
+                .get_tile_data(Cell::new(7, 0))
+                .expect("no tile data"),
             (7, 0)
         );
         assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(0, 6)).unwrap(),
+            tilemap_manager
+                .get_tile_data(Cell::new(0, 6))
+                .expect("no tile data"),
             (0, 6)
         );
         assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(2, 1)).unwrap(),
+            tilemap_manager
+                .get_tile_data(Cell::new(2, 1))
+                .expect("no tile data"),
             (2, 1)
         );
         assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(4, 4)).unwrap(),
+            tilemap_manager
+                .get_tile_data(Cell::new(4, 4))
+                .expect("no tile data"),
             (4, 4)
         );
         assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(7, 8)).unwrap(),
+            tilemap_manager
+                .get_tile_data(Cell::new(7, 8))
+                .expect("no tile data"),
             (7, 8)
         );
         // Testing bounds
-        assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(7, 9)).is_err(),
-            true
-        );
-        assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(8, 7)).is_err(),
-            true
-        );
-        assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(0, 9)).is_err(),
-            true
-        );
-        assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(8, 0)).is_err(),
-            true
-        );
+        assert!(tilemap_manager.get_tile_data(Cell::new(7, 9)).is_err());
+        assert!(tilemap_manager.get_tile_data(Cell::new(8, 7)).is_err(),);
+        assert!(tilemap_manager.get_tile_data(Cell::new(0, 9)).is_err(),);
+        assert!(tilemap_manager.get_tile_data(Cell::new(8, 0)).is_err(),);
     }
 
     #[test]
     fn tilemap_manager_sparse_access() {
         let mut world = World::new();
 
+        #[allow(clippy::type_complexity)]
         let mut system_state: SystemState<(
             Commands,
             TilemapManager<(i32, i32), MapLayers, SquareChunkLayer<(i32, i32)>, SquareMapData>,
@@ -470,38 +472,33 @@ mod tests {
         tilemap_manager.set_tilemap_entity(map_entity);
 
         assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(0, 0)).unwrap(),
+            tilemap_manager
+                .get_tile_data(Cell::new(0, 0))
+                .expect("no tile data"),
             (0, 0)
         );
         assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(31, 31)).unwrap(),
+            tilemap_manager
+                .get_tile_data(Cell::new(31, 31))
+                .expect("no tile data"),
             (31, 31)
         );
         // Testing bounds
-        assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(7, 9)).is_err(),
-            true
-        );
-        assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(8, 7)).is_err(),
-            true
-        );
-        assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(0, 9)).is_err(),
-            true
-        );
-        assert_eq!(
-            tilemap_manager.get_tile_data(Cell::new(8, 0)).is_err(),
-            true
-        );
+        assert!(tilemap_manager.get_tile_data(Cell::new(7, 9)).is_err(),);
+        assert!(tilemap_manager.get_tile_data(Cell::new(8, 7)).is_err(),);
+        assert!(tilemap_manager.get_tile_data(Cell::new(0, 9)).is_err(),);
+        assert!(tilemap_manager.get_tile_data(Cell::new(8, 0)).is_err(),);
     }
 
     #[test]
     fn tilemap_manager_dimensions() {
         let mut world = World::new();
 
-        let mut system_state: SystemState<(Commands, SquareTilemapManager<(i32, i32), MapLayers>)> =
-            SystemState::new(&mut world);
+        #[allow(clippy::type_complexity)]
+        let mut system_state: SystemState<(
+            Commands,
+            SquareTilemapManager<(i32, i32), MapLayers>,
+        )> = SystemState::new(&mut world);
         let (mut commands, _) = system_state.get_mut(&mut world);
 
         #[rustfmt::skip]
@@ -537,6 +534,11 @@ mod tests {
         tilemap_manager.set_tilemap_entity(map_entity);
         tilemap_manager.set_layer(MapLayers::Main);
 
-        assert_eq!(tilemap_manager.dimensions().unwrap(), UVec2::new(8, 9));
+        assert_eq!(
+            tilemap_manager
+                .dimensions()
+                .expect("no dimensions available"),
+            UVec2::new(8, 9)
+        );
     }
 }

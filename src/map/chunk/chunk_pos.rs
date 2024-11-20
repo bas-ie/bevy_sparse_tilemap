@@ -22,7 +22,7 @@ pub struct ChunkPos(Cell);
 impl ChunkPos {
     /// Constructs a new TilePos from the given x and y
     pub fn new(x: i32, y: i32) -> ChunkPos {
-        Self { 0: Cell { x, y } }
+        Self(Cell { x, y })
     }
     /// Returns the x position of Self
     pub fn x(&self) -> i32 {
@@ -36,23 +36,24 @@ impl ChunkPos {
 
 impl From<IVec2> for ChunkPos {
     fn from(value: IVec2) -> Self {
-        Self {
-            0: Cell {
-                x: value.x,
-                y: value.y,
-            },
-        }
+        Self(Cell {
+            x: value.x,
+            y: value.y,
+        })
     }
 }
 
-impl Into<(usize, usize)> for ChunkPos {
-    fn into(self) -> (usize, usize) {
-        (self.0.x as usize, self.0.y as usize)
+impl From<(usize, usize)> for ChunkPos {
+    fn from(value: (usize, usize)) -> Self {
+        Self(Cell {
+            x: value.0 as i32,
+            y: value.1 as i32,
+        })
     }
 }
 
 impl Display for ChunkPos {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&*format!("x:{}, y:{}", self.0.x, self.0.y))
+        f.write_str(&format!("x:{}, y:{}", self.0.x, self.0.y))
     }
 }

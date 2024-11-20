@@ -101,7 +101,7 @@ where
                     .map(|(chunk_tile_pos, tile_data)| {
                         let number =
                             ((chunk_tile_pos.x() as u64) << 32) | chunk_tile_pos.y() as u64;
-                        (number, tile_data.clone())
+                        (number, *tile_data)
                     })
                     .collect();
                 SquareChunkLayer {
@@ -205,7 +205,7 @@ where
     }
 
     /// Creates a new [`SquareChunkLayerData::Dense`]from the given vectors of vectors of T
-    pub fn new_dense_from_vecs(tile_data: &Vec<Vec<T>>) -> Self {
+    pub fn new_dense_from_vecs(tile_data: &[Vec<T>]) -> Self {
         let mut given_tile_count = 0u64;
 
         for tile_data in tile_data.iter() {
@@ -268,7 +268,7 @@ where
 
     /// Gets mutable access to the tile data at the given [`ChunkCell`]. Can fail if the given cell is not a valid position in the chunk
     pub fn get_tile_data_mut(&mut self, chunk_tile_pos: ChunkCell) -> Option<&mut T> {
-        return match self {
+        match self {
             SquareChunkLayerData::Sparse(layer_data, ..) => {
                 let number = ((chunk_tile_pos.x() as u64) << 32) | chunk_tile_pos.y() as u64;
                 layer_data.get_mut(&number)
@@ -276,12 +276,12 @@ where
             SquareChunkLayerData::Dense(layer_data) => {
                 layer_data.get_mut(chunk_tile_pos.y() as usize, chunk_tile_pos.x() as usize)
             }
-        };
+        }
     }
 
     /// Gets immutable access to the tile data at the given [`ChunkCell`]. Can fail if the given cell is not a valid position in the chunk
     pub fn get_tile_data(&self, chunk_tile_pos: ChunkCell) -> Option<&T> {
-        return match self {
+        match self {
             SquareChunkLayerData::Sparse(layer_data, ..) => {
                 let number = ((chunk_tile_pos.x() as u64) << 32) | chunk_tile_pos.y() as u64;
                 layer_data.get(&number)
@@ -289,6 +289,6 @@ where
             SquareChunkLayerData::Dense(layer_data) => {
                 layer_data.get(chunk_tile_pos.y() as usize, chunk_tile_pos.x() as usize)
             }
-        };
+        }
     }
 }
