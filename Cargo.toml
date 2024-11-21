@@ -46,7 +46,7 @@ serde = { version = "1.0.214", optional = true }
 
 
 [dev-dependencies]
-bevy_fast_tilemap = { version = "0.8.1" }
+# bevy_fast_tilemap = { version = "0.8.1" }
 bevy = { version = "0.15.0-rc.3" }
 rand = { version = "0.8.5" }
 serde = "1.0.214"
