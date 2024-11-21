@@ -1,29 +1,17 @@
-use bevy::app::FixedUpdate;
-use bevy::asset::{Assets, Handle};
+use rand::Rng;
+
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
-use bevy::math::UVec2;
-use bevy::prelude::{
-    apply_deferred, default, App, Camera2dBundle, Commands, Entity, IntoSystemConfigs, PluginGroup,
-    Reflect, RegularPolygon, Res, ResMut, Resource, Startup, Window, WindowPlugin,
-};
-use bevy::render::color::Color;
-use bevy::render::mesh::Mesh;
-use bevy::sprite::{ColorMaterial, MaterialMesh2dBundle, Mesh2dHandle};
-use bevy::time::{Fixed, Time};
-use bevy::transform::components::Transform;
+use bevy::prelude::*;
 use bevy::window::PresentMode;
-use bevy::DefaultPlugins;
 use bevy_sparse_tilemap::hex::map_chunk_layer::HexagonChunkSettings;
 use bevy_sparse_tilemap::hex::map_data::HexMapData;
 use bevy_sparse_tilemap::hex::{
     hex_offset_from_orientation, hex_rotation, HexTilemapBuilder, HexTilemapManager,
 };
-
 use bevy_sparse_tilemap::tilemap_builder::tilemap_layer_builder::TilemapLayer;
 use bst_map_layer_derive::MapLayer;
 use lettuces::cell::Cell;
-use lettuces::{Hex, HexLayout, HexOrientation, Vec2, Vec3};
-use rand::Rng;
+use lettuces::{Hex, HexLayout, HexOrientation};
 
 fn main() {
     App::new()
@@ -36,10 +24,7 @@ fn main() {
             }),
             ..default()
         }))
-        .add_plugins((
-            LogDiagnosticsPlugin::default(),
-            FrameTimeDiagnosticsPlugin::default(),
-        ))
+        .add_plugins((LogDiagnosticsPlugin::default(), FrameTimeDiagnosticsPlugin))
         .add_systems(Startup, (spawn_map, apply_deferred, spawn_tiles).chain())
         .add_systems(FixedUpdate, change_random_tile_color)
         .insert_resource(Time::<Fixed>::from_seconds(0.1))
@@ -67,7 +52,7 @@ struct TileData(u8, u8);
 pub struct MapEntity(Entity);
 
 #[derive(Resource)]
-pub struct HexagonMeshHandle(Mesh2dHandle);
+pub struct HexagonMeshHandle(Mesh2d);
 
 #[derive(Resource, Default)]
 pub struct ColorHandles(Vec<Handle<ColorMaterial>>);
@@ -77,7 +62,7 @@ fn spawn_map(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
     let max_chunk_size = UVec2::new(5, 5);
 
     let mut tilemap_builder = HexTilemapBuilder::new(
-        TilemapLayer::new_dense_from_vecs(generate_random_tile_data(map_size.clone())),
+        TilemapLayer::new_dense_from_vecs(generate_random_tile_data(map_size)),
         HexMapData { max_chunk_size },
         HexagonChunkSettings {
             orientation: HEXAGON_ORIENTATION,
@@ -93,17 +78,18 @@ fn spawn_map(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
         return;
     };
     commands.insert_resource(MapEntity(tilemap));
-    commands.insert_resource(HexagonMeshHandle(Mesh2dHandle(
+    commands.insert_resource(HexagonMeshHandle(Mesh2d(
         meshes.add(RegularPolygon::new(HEXAGON_CIRCUMFERENCE, 6)),
     )));
 
-    let mut camerabundle = Camera2dBundle::default();
-    camerabundle.transform = Transform::from_translation(Vec3::new(
-        (HEXAGON_CIRCUMFERENCE * map_size.x as f32) / 2.0,
-        -((HEXAGON_CIRCUMFERENCE * map_size.y as f32) / 2.0),
-        1.0,
+    commands.spawn((
+        Camera2d,
+        Transform::from_translation(Vec3::new(
+            (HEXAGON_CIRCUMFERENCE * map_size.x as f32) / 2.0,
+            -((HEXAGON_CIRCUMFERENCE * map_size.y as f32) / 2.0),
+            1.0,
+        )),
     ));
-    commands.spawn(camerabundle);
 }
 
 fn generate_random_tile_data(size_to_generate: UVec2) -> Vec<Vec<TileData>> {
@@ -139,8 +125,8 @@ fn spawn_tiles(
 
     let hex_layout = HexLayout {
         orientation: HEXAGON_ORIENTATION,
-        origin: Vec2::ZERO,
-        hex_size: Vec2::splat(HEXAGON_CIRCUMFERENCE),
+        origin: lettuces::Vec2::ZERO,
+        hex_size: lettuces::Vec2::splat(HEXAGON_CIRCUMFERENCE),
         invert_x: false,
         invert_y: false,
     };
@@ -156,17 +142,16 @@ fn spawn_tiles(
             let handle = materials.add(color);
             color_materials.0.push(handle.clone());
             let entity = commands
-                .spawn(MaterialMesh2dBundle {
-                    mesh: hex_mesh.0.clone(),
-                    material: handle,
-                    transform: Transform::from_translation(
+                .spawn((
+                    hex_mesh.0.clone(),
+                    MeshMaterial2d(handle),
+                    Transform::from_translation(
                         hex_layout
                             .hex_to_world_pos(Hex::new(axial_coords.x, axial_coords.y))
                             .extend(1.0),
                     )
                     .with_rotation(hex_rotation(HEXAGON_ORIENTATION)),
-                    ..default()
-                })
+                ))
                 .id();
             let _ = map.set_tile_entity(axial_coords, entity);
         }
@@ -201,5 +186,7 @@ fn change_random_tile_color(
         return;
     };
 
-    commands.entity(entity).insert(color_handle.clone());
+    commands
+        .entity(entity)
+        .insert(MeshMaterial2d(color_handle.clone()));
 }
