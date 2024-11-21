@@ -25,7 +25,7 @@ fn main() {
             ..default()
         }))
         .add_plugins((LogDiagnosticsPlugin::default(), FrameTimeDiagnosticsPlugin))
-        .add_systems(Startup, (spawn_map, apply_deferred, spawn_tiles).chain())
+        .add_systems(Startup, (spawn_map, spawn_tiles).chain())
         .add_systems(FixedUpdate, change_random_tile_color)
         .insert_resource(Time::<Fixed>::from_seconds(0.1))
         .init_resource::<ColorHandles>()
