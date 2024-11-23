@@ -15,7 +15,6 @@ resolver = "2"
 
 [features]
 default = ["serde", "lettuces/bevy", "hex", "square"]
-# bevy_fast_tilemap = ["dep:bevy_fast_tilemap"]
 serde = ["dep:serde", "serde/default", "bevy/serialize", "lettuces/serde"]
 reflect = ["lettuces/bevy_reflect"]
 hex = []
@@ -40,13 +39,9 @@ thiserror = "1.0.44"
 lettuces = { git = "https://github.com/richchurcher/lettuces", branch = "0.15" }
 
 # Optional feature based dependencies
-# Rendering with bevy_fast_tilemap - Removed for now since we dont actually do anything with it
-# bevy_fast_tilemap = { version = "0.5.1", optional = true }
 serde = { version = "1.0.214", optional = true }
 
-
 [dev-dependencies]
-# bevy_fast_tilemap = { version = "0.8.1" }
 bevy = { version = "0.15.0-rc.3" }
 rand = { version = "0.8.5" }
 serde = "1.0.214"

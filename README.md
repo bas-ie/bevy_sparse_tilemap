@@ -40,7 +40,7 @@ A Tilemap crate for the Bevy game engine with a focus on large map sizes and ECS
 
 See [Docs.rs](https://docs.rs/bevy_sparse_tilemap/latest/bevy_sparse_tilemap/) for documentation on how to use `bevy_sparse_tilemap` as well as brief examples.
 
-See [Github Examples](https://github.com/NoahShomette/bevy_sparse_tilemap/tree/main/examples) for longer examples of each feature of the crate.
+See [GitHub examples](https://github.com/NoahShomette/bevy_sparse_tilemap/tree/main/examples) for longer examples of each feature of the crate.
 
 ## What about `bevy_ecs_tilemap`?
 
@@ -56,13 +56,14 @@ You should use `bevy_ecs_tilemap` if:
 
 You should use `bevy_sparse_tilemap` if:
 
-- You want very very large maps, `bevy_sparse_tilemap` can reach substantially larger map sizes compared to `bevy_ecs_tilemap`. (The bevy_fast_tilemap_example currently spawns a 15000x15000 tile map and runs at around 900 fps)
-- You are willing to implement your own tilemap rendering (This crate has an example for integration with `bevy_fast_tilemap` however that is not currently a feature that is natively supported by this crate)
+- You want very very large maps, `bevy_sparse_tilemap` can reach substantially larger map sizes compared to `bevy_ecs_tilemap`.
+- You are willing to implement your own tilemap rendering.
 
 ## Bevy Version
 
 | BST Version | Bevy Version |
 | :---------: | :----------: |
+|     0.4     |     0.15     |
 |     0.3     |     0.14     |
 |     0.2     |     0.13     |
 |     0.1     |     0.13     |
