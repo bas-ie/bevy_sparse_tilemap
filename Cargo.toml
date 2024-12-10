@@ -32,17 +32,16 @@ opt-level = 1
 opt-level = 3
 
 [dependencies]
-bevy = { version = "0.15.0-rc.3", default-features = false, features = [] }
+bevy = { version = "0.15", default-features = false, features = [] }
 bst_map_layer_derive = { version = "0.1.0" }
-# thiserror = "2.0.1"
 thiserror = "1.0.44"
-lettuces = { git = "https://github.com/richchurcher/lettuces", branch = "0.15" }
+lettuces = { version = "0.0.7" }
 
 # Optional feature based dependencies
 serde = { version = "1.0.214", optional = true }
 
 [dev-dependencies]
-bevy = { version = "0.15.0-rc.3" }
+bevy = { version = "0.15" }
 rand = { version = "0.8.5" }
 serde = "1.0.214"
 ron = "0.8.1"
