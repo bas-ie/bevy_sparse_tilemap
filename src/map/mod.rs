@@ -1,14 +1,14 @@
 //! This module contains the features that drive the actual map.
-//! 
+//!
 //! ## Broad Overview
-//! 
+//!
 //! There are two main traits that drive bevy sparse tilemap.
-//! 
+//!
 //! - [`MapData`]
 //! - [`ChunkLayer`]
-//! 
+//!
 //! MapData is the high level implementation that drives map construction and cell -> chunk pos conversion.
-//! 
+//!
 //! ChunkLayer is the meat and potatoes of BST and controls all of the access of the map.
 
 pub mod chunk;
@@ -50,6 +50,7 @@ where
 /// Trait that must be implemented for a map type. It consists of mandatory functions used in building new maps as well as implementing a way to convert a given [`Cell`] into a chunk pos
 pub trait MapData: Hash + Component {
     /// Converts a [`Cell`] (A position on the map) into a [`ChunkPos`] (The position of the chunk that that cell is in)
+    #[allow(clippy::wrong_self_convention)]
     fn into_chunk_pos(&self, cell: Cell) -> ChunkPos;
 
     /// The maximum size that a chunk can be
@@ -58,7 +59,7 @@ pub trait MapData: Hash + Component {
     /// Function that breaks a [`Vec<Vec<TileData>>`] down into a [`Vec<Vec<TileData>>`] of the given [`ChunkPos`] chunks data
     fn break_data_vecs_down_into_chunk_data<TileData>(
         &self,
-        data: &Vec<Vec<TileData>>,
+        data: &[Vec<TileData>],
         chunk_pos: ChunkPos,
         max_chunk_size: UVec2,
     ) -> Vec<Vec<TileData>>
@@ -74,7 +75,7 @@ pub trait MapData: Hash + Component {
     ///     - Correctly positioned meaning chunk 0:0 contains the tiles for cell positions 0:0 -> 0:max chunk size and max chunk size:0 and so forth for each chunk in order
     fn break_data_vecs_into_chunks<TileData, MapChunk>(
         &self,
-        data: &Vec<Vec<TileData>>,
+        data: &[Vec<TileData>],
         max_chunk_size: UVec2,
         chunk_settings: MapChunk::ChunkSettings,
     ) -> Vec<Vec<Chunk<MapChunk, TileData>>>

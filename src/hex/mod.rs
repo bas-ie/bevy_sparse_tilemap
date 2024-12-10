@@ -1,3 +1,5 @@
+use std::f32::consts::FRAC_PI_6;
+
 use lettuces::{HexOrientation, OffsetHexMode, Quat};
 use map_chunk_layer::HexChunkLayer;
 use map_data::HexMapData;
@@ -32,6 +34,6 @@ pub fn hex_offset_from_orientation(orientation: HexOrientation) -> OffsetHexMode
 pub fn hex_rotation(orientation: HexOrientation) -> Quat {
     Quat::from_rotation_z(match orientation {
         HexOrientation::Pointy => 0.0,
-        HexOrientation::Flat => 0.52359878,
+        HexOrientation::Flat => FRAC_PI_6,
     })
 }

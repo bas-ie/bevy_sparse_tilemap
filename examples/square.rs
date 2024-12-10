@@ -1,16 +1,19 @@
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
-use bevy::math::UVec2;
-use bevy::prelude::{
-    default, App, Commands, Entity, PluginGroup, Reflect, Resource, Startup, Window, WindowPlugin,
-};
-use bevy::window::PresentMode;
-use bevy::DefaultPlugins;
-use bevy_sparse_tilemap::square::map_chunk_layer::{SquareChunkLayer, SquareChunkSettings};
-use bevy_sparse_tilemap::square::map_data::SquareMapData;
-use bevy_sparse_tilemap::tilemap_builder::tilemap_layer_builder::TilemapLayer;
-use bevy_sparse_tilemap::tilemap_builder::TilemapBuilder;
-use bst_map_layer_derive::MapLayer;
 use rand::Rng;
+use std::f32::consts::FRAC_PI_4;
+
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+use bevy::prelude::*;
+use bevy::window::PresentMode;
+use bevy_sparse_tilemap::{
+    square::{
+        map_chunk_layer::{SquareChunkLayer, SquareChunkSettings},
+        map_data::SquareMapData,
+        SquareTilemapManager,
+    },
+    tilemap_builder::{tilemap_layer_builder::TilemapLayer, TilemapBuilder},
+};
+use bst_map_layer_derive::MapLayer;
+use lettuces::cell::Cell;
 
 fn main() {
     App::new()
@@ -23,11 +26,9 @@ fn main() {
             }),
             ..default()
         }))
-        .add_plugins((
-            LogDiagnosticsPlugin::default(),
-            FrameTimeDiagnosticsPlugin::default(),
-        ))
-        .add_systems(Startup, spawn_map)
+        .add_plugins((LogDiagnosticsPlugin::default(), FrameTimeDiagnosticsPlugin))
+        .add_systems(Startup, (spawn_map, spawn_tiles).chain())
+        .init_resource::<ColorHandles>()
         .run();
 }
 
@@ -41,6 +42,12 @@ pub enum MapLayers {
     DenseExtra,
 }
 
+/// Change to change the square tile sizes
+const TILE_SIZE: f32 = 15.0;
+
+/// Change to change the gap between tiles
+const TILE_GAP: f32 = 1.0;
+
 #[derive(Hash, Default, Copy, Clone, Reflect)]
 struct TileData(u8, u8);
 
@@ -48,18 +55,24 @@ struct TileData(u8, u8);
 #[derive(Resource)]
 pub struct MapEntity(Entity);
 
-fn spawn_map(mut commands: Commands) {
-    let map_size = UVec2::new(500, 500);
-    let max_chunk_size = UVec2::new(100, 100);
+#[derive(Resource)]
+pub struct SquareMeshHandle(Mesh2d);
+
+#[derive(Resource, Default)]
+pub struct ColorHandles(Vec<Handle<ColorMaterial>>);
+
+fn spawn_map(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
+    let map_size = UVec2::new(5, 5);
+    let max_chunk_size = UVec2::new(1, 1);
 
     let mut tilemap_builder =
         TilemapBuilder::<TileData, MapLayers, SquareChunkLayer<TileData>, SquareMapData>::new(
-            TilemapLayer::new_dense_from_vecs(generate_random_tile_data(map_size.clone())),
+            TilemapLayer::new_dense_from_vecs(generate_random_tile_data(map_size)),
             SquareMapData { max_chunk_size },
             SquareChunkSettings { max_chunk_size },
         );
     tilemap_builder.add_layer(
-        TilemapLayer::new_dense_from_vecs(generate_random_tile_data(map_size.clone())),
+        TilemapLayer::new_dense_from_vecs(generate_random_tile_data(map_size)),
         MapLayers::DenseExtra,
     );
     tilemap_builder.add_layer(
@@ -79,6 +92,17 @@ fn spawn_map(mut commands: Commands) {
         return;
     };
     commands.insert_resource(MapEntity(tilemap));
+    commands.insert_resource(SquareMeshHandle(Mesh2d(
+        meshes.add(RegularPolygon::new(TILE_SIZE, 4)),
+    )));
+    commands.spawn((
+        Camera2d,
+        Transform::from_translation(Vec3::new(
+            (TILE_SIZE * map_size.x as f32) / 2.0,
+            (TILE_SIZE * map_size.y as f32) / 2.0,
+            1.0,
+        )),
+    ));
 }
 
 fn generate_random_tile_data(size_to_generate: UVec2) -> Vec<Vec<TileData>> {
@@ -96,4 +120,44 @@ fn generate_random_tile_data(size_to_generate: UVec2) -> Vec<Vec<TileData>> {
         vec.push(x_vec);
     }
     vec
+}
+
+fn square_to_world_pos(x: i32, y: i32) -> Vec3 {
+    // The TILE_SIZE is actually the circumferential radius. To find the actual length of a side,
+    // we need to multiply by the square root of 2.
+    let side_length = TILE_SIZE * 2_f32.sqrt();
+    let coords = Vec2::new(x as f32, y as f32) * (side_length + TILE_GAP);
+    coords.extend(1.)
+}
+
+fn spawn_tiles(
+    map_entity: Res<MapEntity>,
+    square_mesh: ResMut<SquareMeshHandle>,
+    mut map: SquareTilemapManager<TileData, MapLayers>,
+    mut commands: Commands,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut color_materials: ResMut<ColorHandles>,
+) {
+    map.set_tilemap_entity(map_entity.0);
+    map.set_layer(MapLayers::Base);
+    let Ok(dimensions) = map.dimensions() else {
+        return;
+    };
+
+    for y in 0..dimensions.y as i32 {
+        for x in 0..dimensions.x as i32 {
+            let color = Color::hsl(360. * x as f32 / y as f32, 0.95, 0.7);
+            let handle = materials.add(color);
+            color_materials.0.push(handle.clone());
+            let entity = commands
+                .spawn((
+                    square_mesh.0.clone(),
+                    MeshMaterial2d(handle),
+                    Transform::from_translation(square_to_world_pos(x, y))
+                        .with_rotation(Quat::from_rotation_z(FRAC_PI_4)),
+                ))
+                .id();
+            let _ = map.set_tile_entity(Cell { x, y }, entity);
+        }
+    }
 }

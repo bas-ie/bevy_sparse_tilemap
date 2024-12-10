@@ -223,7 +223,7 @@ where
     /// - If the [`MapLayer`] does not exist in the chunk
     pub fn get_chunk_dimensions(&self) -> UVec2 {
         if let Some(tiles) = self.data.get(&1u32) {
-            return tiles.get_chunk_dimensions();
+            tiles.get_chunk_dimensions()
         } else {
             panic!("MapLayer does not exist in chunk")
         }
@@ -364,7 +364,7 @@ mod tests {
         assert_eq!(
             chunk
                 .get_tile_data(MapLayers::Main, ChunkCell::new(0, 0))
-                .unwrap(),
+                .expect("no tile data"),
             0
         );
 
@@ -385,13 +385,13 @@ mod tests {
         assert_eq!(
             chunk
                 .get_tile_data(MapLayers::Main, ChunkCell::new(0, 0))
-                .unwrap(),
+                .expect("no tile data"),
             TileData(0)
         );
         assert_eq!(
             chunk
                 .get_tile_data(MapLayers::Main, ChunkCell::new(3, 2))
-                .unwrap(),
+                .expect("no tile data"),
             TileData(11)
         );
 
@@ -412,13 +412,13 @@ mod tests {
         assert_eq!(
             chunk
                 .get_tile_data(MapLayers::Main, ChunkCell::new(0, 0))
-                .unwrap(),
+                .expect("no tile data"),
             (0, 0)
         );
         assert_eq!(
             chunk
                 .get_tile_data(MapLayers::Main, ChunkCell::new(2, 2))
-                .unwrap(),
+                .expect("no tile data"),
             (10, 1)
         );
     }
@@ -460,7 +460,7 @@ mod tests {
         assert_eq!(
             chunk
                 .get_tile_data(MapLayers::Main, ChunkCell::new(3, 2))
-                .unwrap(),
+                .expect("no tile data"),
             (11, 4)
         );
     }
@@ -484,7 +484,7 @@ mod tests {
         assert_eq!(
             chunk
                 .get_tile_data(MapLayers::Main, ChunkCell::new(0, 0))
-                .unwrap(),
+                .expect("no tile data"),
             (50, 60)
         );
     }
@@ -508,7 +508,7 @@ mod tests {
         assert_eq!(
             chunk
                 .get_tile_data(MapLayers::Secondary, ChunkCell::new(0, 0))
-                .unwrap(),
+                .expect("no tile data"),
             (50, 60)
         );
     }
@@ -536,7 +536,7 @@ mod tests {
         assert_eq!(
             chunk
                 .get_tile_data(MapLayers::Secondary, ChunkCell::new(3, 2))
-                .unwrap(),
+                .expect("no tile data"),
             (11, 4)
         );
     }

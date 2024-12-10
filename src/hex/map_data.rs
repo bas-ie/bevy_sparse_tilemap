@@ -40,7 +40,7 @@ impl MapData for HexMapData {
 
     fn break_data_vecs_down_into_chunk_data<TileData>(
         &self,
-        data: &Vec<Vec<TileData>>,
+        data: &[Vec<TileData>],
         chunk_pos: ChunkPos,
         max_chunk_size: UVec2,
     ) -> Vec<Vec<TileData>>
@@ -68,7 +68,7 @@ impl MapData for HexMapData {
 
     fn break_data_vecs_into_chunks<TileData, MapChunk>(
         &self,
-        data: &Vec<Vec<TileData>>,
+        data: &[Vec<TileData>],
         max_chunk_size: UVec2,
         chunk_settings: MapChunk::ChunkSettings,
     ) -> Vec<Vec<Chunk<MapChunk, TileData>>>
@@ -87,7 +87,7 @@ impl MapData for HexMapData {
             let mut chunks_rows: Vec<Chunk<MapChunk, TileData>> = vec![];
             for x in 0..chunks_on_x {
                 let vec = self.break_data_vecs_down_into_chunk_data(
-                    &data,
+                    data,
                     ChunkPos::new(x, y),
                     max_chunk_size,
                 );
